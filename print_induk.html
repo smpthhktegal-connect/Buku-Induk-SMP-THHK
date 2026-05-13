@@ -31,26 +31,55 @@
         }
 
         .header {
-            text-align: center;
-            border-bottom: 3px double #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 4px double #000;
             padding-bottom: 10px;
             margin-bottom: 20px;
+            gap: 20px;
         }
 
-        .header h1 {
-            font-size: 18pt;
-            margin: 0 0 5px 0;
-            text-transform: uppercase;
+        .header-logo {
+            width: 100px;
+            height: 100px;
+            flex-shrink: 0;
         }
 
-        .header h2 {
-            font-size: 14pt;
-            margin: 0 0 5px 0;
+        .header-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
         }
 
-        .header p {
+        .header-text {
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        .header-text h1 {
+            font-size: 16pt;
+            margin: 0;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .header-text h2 {
+            font-size: 22pt;
+            margin: 0;
+            font-weight: 800;
+        }
+
+        .header-text h3 {
+            font-size: 12pt;
+            margin: 2px 0;
+            font-weight: bold;
+        }
+
+        .header-text p {
             font-size: 10pt;
             margin: 0;
+            line-height: 1.2;
         }
 
         .title {
@@ -185,10 +214,16 @@
         
         <!-- Header Kop Surat -->
         <div class="header">
-            <h1>YAYASAN PENDIDIKAN TUNAS HIDUP HARAPAN KITA</h1>
-            <h2>SMP TUNAS HIDUP HARAPAN KITA (THHK)</h2>
-            <p>Jl. Contoh Alamat No. 123, Kota Tegal, Jawa Tengah</p>
-            <p>NPSN: 203XXXXX | Telp: (0283) XXXXXX</p>
+            <div class="header-logo">
+                <img src="logo_thhk.png" alt="Logo THHK" id="kop-logo">
+            </div>
+            <div class="header-text">
+                <h1>YAYASAN TRI DHARMA TEGAL</h1>
+                <h2>SMP TUNAS HIDUP HARAPAN KITA</h2>
+                <h3>( SEKOLAH RAMAH ANAK, TERAKREDITASI "B" )</h3>
+                <p>Alamat: Jalan Gurami Nomor 6 Telepon (0283) 6146846 Kota Tegal</p>
+                <p>Surel : smpthhk.tegal@gmail.com</p>
+            </div>
         </div>
 
         <div class="title">LEMBAR BUKU INDUK SISWA</div>
