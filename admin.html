@@ -1017,7 +1017,13 @@
                 fetchData(); // Refresh table
             } catch (err) {
                 console.error("Save error:", err);
-                showToast(err.message || "Gagal menyimpan data", "error");
+                if (err.code === 'PGRST205' || (err.message && err.message.includes('schema cache'))) {
+                    // Beri notifikasi khusus jika error kolom tidak cocok
+                    alert("ERROR DATABASE:\n\nSistem gagal menyimpan karena ada nama kolom di aplikasi yang belum Anda buat di tabel Supabase.\n\nPastikan kolom ini ada: \nnis, nisn, nama_lengkap, jenis_kelamin, tempat_lahir, tanggal_lahir, agama, kewarganegaraan, anak_ke, jumlah_saudara, status_siswa, kelas_sekarang, tahun_masuk, alamat_lengkap, no_telp_siswa, asal_sekolah, nama_ayah, pekerjaan_ayah, nama_ibu, pekerjaan_ibu, no_telp_ortu, nama_wali, pekerjaan_wali, foto_url.");
+                    showToast("Struktur tabel belum sesuai", "error");
+                } else {
+                    showToast(err.message || "Gagal menyimpan data", "error");
+                }
             } finally {
                 btnSubmit.innerHTML = originalBtnHtml;
                 btnSubmit.disabled = false;
