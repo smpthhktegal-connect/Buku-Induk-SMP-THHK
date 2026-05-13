@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Buku Induk THHK</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af', // Deep Blue
+                        secondary: '#3b82f6', // Light Blue
+                        accent: '#f59e0b', // Amber
+                        dark: '#0f172a'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
+        .sidebar { transition: all 0.3s ease; }
+        .glass-header {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease-in-out;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            transform: scale(0.95) translateY(20px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+        
+        /* Custom Scrollbar for Modal */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Form Inputs */
+        .input-group label { display: block; font-size: 0.75rem; font-weight: 600; color: #475569; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .form-control { width: 100%; padding: 0.6rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; background-color: #f8fafc; font-size: 0.875rem; transition: all 0.2s; }
+        .form-control:focus { outline: none; border-color: #3b82f6; background-color: #fff; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar w-64 bg-dark text-white flex flex-col h-full shadow-2xl relative z-20">
+        <div class="p-6 border-b border-gray-800 flex items-center gap-3">
+            <i class="fas fa-book-open text-2xl text-secondary"></i>
+            <h1 class="text-xl font-bold tracking-tight">Buku Induk</h1>
+        </div>
+        
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ml-2 mt-4">Menu Utama</p>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/20 text-secondary font-medium">
+                <i class="fas fa-chart-pie w-5"></i> Dashboard
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                <i class="fas fa-users w-5"></i> Data Siswa
+            </a>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                <i class="fas fa-print w-5"></i> Cetak Laporan
+            </a>
+            
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ml-2 mt-8">Pengaturan</p>
+            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition">
+                <i class="fas fa-cog w-5"></i> Pengaturan Sistem
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-800">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-secondary to-primary flex items-center justify-center font-bold">
+                    A
+                </div>
+                <div>
+                    <p id="user-name" class="font-medium text-sm">Administrator</p>
+                    <p id="user-role" class="text-xs text-gray-400">Admin</p>
+                </div>
+            </div>
+            <button onclick="logout()" class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-500 hover:text-white transition">
+                <i class="fas fa-sign-out-alt"></i> Keluar
+            </button>
+        </div>
+    </aside>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed top-5 left-1/2 transform -translate-x-1/2 z-50 hidden transition-all duration-300">
+        <div id="toast-content" class="px-6 py-3 rounded-xl shadow-2xl font-medium text-sm text-white flex items-center gap-3">
+            <span id="toast-icon"><i class="fas fa-info-circle"></i></span>
+            <span id="toast-message">Notifikasi</span>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col h-full relative z-10 overflow-hidden">
+        
+        <!-- HEADER -->
+        <header class="glass-header h-16 px-8 flex items-center justify-between shadow-sm z-30 relative">
+            <div>
+                <h2 class="text-lg font-bold text-gray-800">Dashboard Statistik</h2>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="admin-search" oninput="handleSearch()" placeholder="Cari NIS / Nama..." class="pl-10 pr-4 py-2 border border-gray-200 rounded-full text-sm focus:outline-none focus:border-secondary w-64 bg-gray-50">
+                </div>
+            </div>
+        </header>
+
+        <!-- DASHBOARD BODY -->
+        <div class="flex-1 overflow-y-auto p-8">
+            
+            <!-- STATS CARDS -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-blue-50 text-secondary flex items-center justify-center text-2xl">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Total Siswa Aktif</p>
+                        <h3 id="stat-total" class="text-2xl font-bold text-gray-800">0</h3>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-green-50 text-green-500 flex items-center justify-center text-2xl">
+                        <i class="fas fa-mars"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Laki-laki (Aktif)</p>
+                        <h3 id="stat-l" class="text-2xl font-bold text-gray-800">0</h3>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-pink-50 text-pink-500 flex items-center justify-center text-2xl">
+                        <i class="fas fa-venus"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Perempuan (Aktif)</p>
+                        <h3 id="stat-p" class="text-2xl font-bold text-gray-800">0</h3>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-amber-50 text-accent flex items-center justify-center text-2xl">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 font-medium">Alumni (Lulus)</p>
+                        <h3 id="stat-alumni" class="text-2xl font-bold text-gray-800">0</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MAIN TABLE AREA -->
+            <div class="flex-1 overflow-hidden flex flex-col bg-white border-t border-gray-100">
+                <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row md:justify-between md:items-center bg-gray-50/50 gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-800">Daftar Induk Siswa</h3>
+                        <p class="text-xs text-gray-500">Kelola master data siswa secara keseluruhan.</p>
+                    </div>
+                    
+                    <!-- Advanced Filters -->
+                    <div class="flex flex-wrap items-center gap-3">
+                        <select id="filter-status" onchange="handleSearch()" class="px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary text-gray-600 bg-white shadow-sm font-medium">
+                            <option value="">Semua Status</option>
+                            <option value="Aktif">Status: Aktif</option>
+                            <option value="Lulus">Status: Lulus</option>
+                            <option value="Pindah">Status: Pindah</option>
+                            <option value="Keluar">Status: Keluar</option>
+                        </select>
+                        <select id="filter-jk" onchange="handleSearch()" class="px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary text-gray-600 bg-white shadow-sm font-medium">
+                            <option value="">Semua Gender</option>
+                            <option value="Laki-laki">Gender: Laki-laki</option>
+                            <option value="Perempuan">Gender: Perempuan</option>
+                        </select>
+                        
+                        <div class="w-px h-8 bg-gray-300 mx-1"></div> <!-- Separator -->
+                        
+                        <!-- Import / Export Controls -->
+                        <div class="flex bg-gray-100 rounded-xl p-1 shadow-inner">
+                            <button onclick="document.getElementById('file-import-csv').click()" class="px-3 py-2 text-sm font-bold text-gray-600 hover:text-green-700 hover:bg-white rounded-lg transition" title="Import data dari Excel (CSV)">
+                                <i class="fas fa-file-import text-green-600 mr-1"></i> Import
+                            </button>
+                            <button onclick="exportCSV()" class="px-3 py-2 text-sm font-bold text-gray-600 hover:text-blue-700 hover:bg-white rounded-lg transition" title="Download data sebagai Excel (CSV)">
+                                <i class="fas fa-file-export text-blue-600 mr-1"></i> Export
+                            </button>
+                            <input type="file" id="file-import-csv" accept=".csv" class="hidden" onchange="importCSV(event)">
+                        </div>
+
+                        <button onclick="openFormModal()" class="bg-secondary hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md transition flex items-center gap-2">
+                            <i class="fas fa-plus"></i> Tambah Data
+                        </button>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-gray-50 sticky top-0 z-10 shadow-sm">
+                            <tr>
+                                <th class="py-3 px-6 text-xs font-bold text-gray-500 uppercase">NIS / NISN</th>
+                                <th class="py-3 px-6 text-xs font-bold text-gray-500 uppercase">Nama Lengkap</th>
+                                <th class="py-3 px-6 text-xs font-bold text-gray-500 uppercase">Kelas</th>
+                                <th class="py-3 px-6 text-xs font-bold text-gray-500 uppercase">Jenis Kelamin</th>
+                                <th class="py-3 px-6 text-xs font-bold text-gray-500 uppercase">Status</th>
+                                <th class="py-3 px-6 text-xs font-bold text-gray-500 uppercase text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-table-body" class="divide-y divide-gray-100">
+                            <tr><td colspan="6" class="py-10 text-center text-gray-500">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- MODAL TAMBAH DATA SISWA -->
+    <div id="modal-add-student" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden">
+            
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <div class="flex items-center gap-3">
+                    <div id="modal-icon-bg" class="w-10 h-10 rounded-lg bg-blue-100 text-primary flex items-center justify-center text-lg">
+                        <i id="modal-icon" class="fas fa-user-plus"></i>
+                    </div>
+                    <div>
+                        <h2 id="modal-title" class="text-xl font-bold text-gray-800">Tambah Data Buku Induk</h2>
+                        <p id="modal-subtitle" class="text-xs text-gray-500">Isi form di bawah ini untuk mendaftarkan siswa baru.</p>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 hover:bg-red-100 hover:text-red-600 transition">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body (Scrollable Form) -->
+            <div class="flex-1 overflow-y-auto p-6 custom-scroll">
+                <form id="form-add-student" class="space-y-8" onsubmit="saveStudent(event)">
+                    
+                    <!-- SECTION 1: Data Utama -->
+                    <div>
+                        <h3 class="text-sm font-bold text-primary border-b border-gray-200 pb-2 mb-4 flex items-center gap-2">
+                            <i class="fas fa-id-card"></i> Informasi Dasar Siswa
+                        </h3>
+
+                        <!-- FOTO UPLOAD -->
+                        <div class="col-span-1 md:col-span-3 flex items-center gap-6 mb-6 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+                            <div class="relative w-20 h-20 bg-gray-200 rounded-full border-2 border-white shadow-md overflow-hidden flex-shrink-0 group">
+                                <img id="preview-foto" src="https://via.placeholder.com/150?text=Foto" class="w-full h-full object-cover">
+                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer" onclick="document.getElementById('f_foto').click()">
+                                    <i class="fas fa-camera text-white"></i>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Pas Foto Siswa (Opsional)</label>
+                                <input type="file" id="f_foto" accept="image/jpeg, image/png, image/jpg" class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition cursor-pointer" onchange="previewImage(event)">
+                                <p class="text-[10px] text-gray-400 mt-1">Format: JPG/PNG. Disarankan rasio 3x4. Max 100KB.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <div class="input-group">
+                                <label>NIS <span class="text-red-500">*</span></label>
+                                <input type="text" id="f_nis" class="form-control" placeholder="Nomor Induk Sekolah" required>
+                            </div>
+                            <div class="input-group">
+                                <label>NISN</label>
+                                <input type="text" id="f_nisn" class="form-control" placeholder="Nomor Induk Siswa Nasional">
+                            </div>
+                            <div class="input-group">
+                                <label>Nama Lengkap <span class="text-red-500">*</span></label>
+                                <input type="text" id="f_nama" class="form-control" placeholder="Nama sesuai akta" required>
+                            </div>
+                            
+                            <div class="input-group">
+                                <label>Jenis Kelamin <span class="text-red-500">*</span></label>
+                                <select id="f_jk" class="form-control" required>
+                                    <option value="">-- Pilih --</option>
+                                    <option value="Laki-laki">Laki-laki</option>
+                                    <option value="Perempuan">Perempuan</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Tempat Lahir</label>
+                                <input type="text" id="f_tempat_lahir" class="form-control" placeholder="Kota/Kabupaten">
+                            </div>
+                            <div class="input-group">
+                                <label>Tanggal Lahir</label>
+                                <input type="date" id="f_tgl_lahir" class="form-control">
+                            </div>
+
+                            <div class="input-group">
+                                <label>Agama</label>
+                                <select id="f_agama" class="form-control">
+                                    <option value="">-- Pilih Agama --</option>
+                                    <option value="Islam">Islam</option>
+                                    <option value="Kristen">Kristen</option>
+                                    <option value="Katolik">Katolik</option>
+                                    <option value="Hindu">Hindu</option>
+                                    <option value="Buddha">Buddha</option>
+                                    <option value="Konghucu">Konghucu</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Kewarganegaraan</label>
+                                <input type="text" id="f_warga" class="form-control" value="WNI">
+                            </div>
+                            <div class="input-group flex gap-2">
+                                <div class="w-1/2">
+                                    <label>Anak Ke-</label>
+                                    <input type="number" id="f_anak_ke" class="form-control" min="1">
+                                </div>
+                                <div class="w-1/2">
+                                    <label>Jml. Saudara</label>
+                                    <input type="number" id="f_jml_sdr" class="form-control" min="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: Akademik & Kontak -->
+                    <div>
+                        <h3 class="text-sm font-bold text-primary border-b border-gray-200 pb-2 mb-4 flex items-center gap-2">
+                            <i class="fas fa-school"></i> Data Akademik & Kontak
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+                            <div class="input-group">
+                                <label>Status Siswa</label>
+                                <select id="f_status" class="form-control bg-green-50 text-green-700 font-semibold border-green-200 focus:border-green-500">
+                                    <option value="Aktif">Aktif</option>
+                                    <option value="Pindah">Pindah / Mutasi</option>
+                                    <option value="Lulus">Lulus</option>
+                                    <option value="Keluar">Keluar</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label>Kelas Masuk / Sekarang</label>
+                                <input type="text" id="f_kelas" class="form-control" placeholder="Contoh: 7A">
+                            </div>
+                            <div class="input-group">
+                                <label>Tahun Masuk</label>
+                                <input type="text" id="f_tahun" class="form-control" placeholder="Contoh: 2024/2025">
+                            </div>
+                            
+                            <div class="input-group md:col-span-2">
+                                <label>Alamat Lengkap</label>
+                                <textarea id="f_alamat" class="form-control" rows="2" placeholder="Jalan, RT/RW, Kelurahan, Kecamatan..."></textarea>
+                            </div>
+                            <div class="space-y-5">
+                                <div class="input-group">
+                                    <label>No. Telepon Siswa</label>
+                                    <input type="text" id="f_telp" class="form-control" placeholder="08xx-xxxx-xxxx">
+                                </div>
+                                <div class="input-group">
+                                    <label>Asal Sekolah Dasar (SD)</label>
+                                    <input type="text" id="f_asal_sd" class="form-control" placeholder="Nama SD Asal">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 3: Orang Tua / Wali -->
+                    <div class="bg-blue-50/50 p-5 rounded-xl border border-blue-100">
+                        <h3 class="text-sm font-bold text-primary mb-4 flex items-center gap-2">
+                            <i class="fas fa-users-cog"></i> Identitas Orang Tua / Wali
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+                            <!-- Ayah -->
+                            <div class="space-y-4">
+                                <div class="input-group">
+                                    <label>Nama Ayah Kandung</label>
+                                    <input type="text" id="f_ayah" class="form-control" placeholder="Nama Lengkap Ayah">
+                                </div>
+                                <div class="input-group">
+                                    <label>Pekerjaan Ayah</label>
+                                    <input type="text" id="f_pek_ayah" class="form-control" placeholder="Contoh: Wiraswasta">
+                                </div>
+                            </div>
+                            <!-- Ibu -->
+                            <div class="space-y-4">
+                                <div class="input-group">
+                                    <label>Nama Ibu Kandung</label>
+                                    <input type="text" id="f_ibu" class="form-control" placeholder="Nama Lengkap Ibu">
+                                </div>
+                                <div class="input-group">
+                                    <label>Pekerjaan Ibu</label>
+                                    <input type="text" id="f_pek_ibu" class="form-control" placeholder="Contoh: Mengurus Rumah Tangga">
+                                </div>
+                            </div>
+                            <!-- Kontak Tambahan -->
+                            <div class="input-group md:col-span-2 border-t border-blue-100 pt-4 mt-2">
+                                <label>No. Telepon / WhatsApp Orang Tua (Prioritas)</label>
+                                <input type="text" id="f_telp_ortu" class="form-control md:w-1/2" placeholder="08xx-xxxx-xxxx">
+                            </div>
+                            <!-- Wali (Opsional) -->
+                            <div class="input-group">
+                                <label>Nama Wali (Opsional)</label>
+                                <input type="text" id="f_wali" class="form-control" placeholder="Jika tidak tinggal bersama ortu">
+                            </div>
+                            <div class="input-group">
+                                <label>Pekerjaan Wali</label>
+                                <input type="text" id="f_pek_wali" class="form-control" placeholder="">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hidden submit button to trigger form validation -->
+                    <button type="submit" id="hidden-submit" class="hidden"></button>
+                </form>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+                <button type="button" onclick="closeModal()" class="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-600 bg-white border border-gray-300 hover:bg-gray-100 transition shadow-sm">
+                    Tutup
+                </button>
+                <button type="button" id="btn-save-modal" onclick="document.getElementById('hidden-submit').click()" class="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-primary hover:bg-blue-800 transition shadow-lg flex items-center gap-2">
+                    <i class="fas fa-save"></i> <span id="btn-save-text">Simpan ke Database</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Supabase Initialization
+        const SUPABASE_URL = 'https://jbmhfwfckmneivztsizc.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_lkdD9wXKswBi-r0PegxHhQ_6QTnitLL'; // Must match index.html
+        var supabaseClient = null;
+        if (window.supabase) {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+
+        let allData = []; // Store data locally for fast search
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            const content = document.getElementById('toast-content');
+            const msg = document.getElementById('toast-message');
+            const icon = document.getElementById('toast-icon');
+            
+            msg.innerText = message;
+            
+            content.className = 'px-6 py-3 rounded-xl shadow-2xl font-medium text-sm text-white flex items-center gap-3';
+            if (type === 'success') {
+                content.classList.add('bg-green-600');
+                icon.innerHTML = '<i class="fas fa-check-circle"></i>';
+            } else if (type === 'error') {
+                content.classList.add('bg-red-600');
+                icon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+            } else {
+                content.classList.add('bg-blue-600');
+                icon.innerHTML = '<i class="fas fa-info-circle"></i>';
+            }
+
+            toast.classList.remove('hidden');
+            toast.style.top = '1.25rem';
+            setTimeout(() => { toast.classList.add('hidden'); }, 3000);
+        }
+
+        // Cek Autentikasi
+        function checkAuth() {
+            const session = localStorage.getItem('bi_session');
+            if (!session) {
+                window.location.href = 'index.html';
+                return;
+            }
+            try {
+                const data = JSON.parse(session);
+                if (data.role !== 'Admin') {
+                    alert('Anda tidak memiliki akses ke halaman ini!');
+                    window.location.href = 'index.html';
+                }
+                document.getElementById('user-name').innerText = data.nama;
+                fetchData(); // Fetch real data if auth passes
+            } catch (e) {
+                window.location.href = 'index.html';
+            }
+        }
+        checkAuth();
+
+        // Fetch Data from Supabase
+        async function fetchData() {
+            if(!supabaseClient) return;
+            try {
+                const { data, error } = await supabaseClient
+                    .from('buku_induk')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                allData = data || [];
+                renderTable(allData);
+                calculateStats(allData);
+            } catch (err) {
+                console.error('Fetch error:', err);
+                showToast("Gagal memuat data", "error");
+            }
+        }
+
+        function calculateStats(data) {
+            let active = 0;
+            let male = 0;
+            let female = 0;
+            let alumni = 0;
+
+            data.forEach(s => {
+                if(s.status_siswa === 'Aktif') {
+                    active++;
+                    if(s.jenis_kelamin === 'Laki-laki') male++;
+                    if(s.jenis_kelamin === 'Perempuan') female++;
+                } else if (s.status_siswa === 'Lulus') {
+                    alumni++;
+                }
+            });
+
+            document.getElementById('stat-total').innerText = active.toLocaleString();
+            document.getElementById('stat-l').innerText = male.toLocaleString();
+            document.getElementById('stat-p').innerText = female.toLocaleString();
+            document.getElementById('stat-alumni').innerText = alumni.toLocaleString();
+        }
+
+        function renderTable(dataToRender) {
+            const tbody = document.getElementById('student-table-body');
+            if (dataToRender.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="py-10 text-center text-gray-500">Tidak ada data ditemukan.</td></tr>';
+                return;
+            }
+
+            let html = '';
+            dataToRender.forEach(student => {
+                let statusBadge = '';
+                if(student.status_siswa === 'Aktif') statusBadge = '<span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-md">Aktif</span>';
+                else if(student.status_siswa === 'Lulus') statusBadge = '<span class="px-2 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-md">Lulus</span>';
+                else statusBadge = '<span class="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-bold rounded-md">' + student.status_siswa + '</span>';
+
+                // Format date safely
+                let dob = '-';
+                if(student.tanggal_lahir) {
+                    const d = new Date(student.tanggal_lahir);
+                    dob = `${student.tempat_lahir || ''}, ${d.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'})}`;
+                }
+
+                let avatar = student.foto_url || 'https://via.placeholder.com/150?text=NA';
+
+                html += `
+                    <tr class="hover:bg-blue-50/50 transition">
+                        <td class="py-4 px-6 flex items-center gap-3">
+                            <img src="${avatar}" class="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm" alt="Foto">
+                            <div>
+                                <p class="font-bold text-gray-800">${student.nis || '-'}</p>
+                                <p class="text-xs text-gray-500">${student.nisn || '-'}</p>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6">
+                            <p class="font-semibold text-gray-800">${student.nama_lengkap}</p>
+                            <p class="text-xs text-gray-500">${dob}</p>
+                        </td>
+                        <td class="py-4 px-6 font-medium">${student.kelas_sekarang || '-'}</td>
+                        <td class="py-4 px-6">${student.jenis_kelamin || '-'}</td>
+                        <td class="py-4 px-6">${statusBadge}</td>
+                        <td class="py-4 px-6 text-right space-x-1">
+                            <button class="w-8 h-8 rounded-full bg-blue-50 text-secondary hover:bg-secondary hover:text-white transition" title="Lihat Detail" onclick="openFormModal('${student.id}', true)"><i class="fas fa-eye"></i></button>
+                            <button class="w-8 h-8 rounded-full bg-amber-50 text-accent hover:bg-accent hover:text-white transition" title="Edit Data" onclick="openFormModal('${student.id}', false)"><i class="fas fa-edit"></i></button>
+                            <button class="w-8 h-8 rounded-full bg-green-50 text-green-600 hover:bg-green-600 hover:text-white transition" title="Cetak Lembar PDF" onclick="window.open('print_induk.html?id=${student.id}', '_blank')"><i class="fas fa-print"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('admin-search').value.toLowerCase();
+            const statusFilter = document.getElementById('filter-status').value;
+            const jkFilter = document.getElementById('filter-jk').value;
+            
+            const filtered = allData.filter(s => {
+                // Teks Search
+                const matchText = !query || 
+                    (s.nis && s.nis.toLowerCase().includes(query)) || 
+                    (s.nama_lengkap && s.nama_lengkap.toLowerCase().includes(query)) ||
+                    (s.nisn && s.nisn.toLowerCase().includes(query));
+                
+                // Dropdown Status
+                const matchStatus = !statusFilter || s.status_siswa === statusFilter;
+                
+                // Dropdown Gender
+                const matchJk = !jkFilter || s.jenis_kelamin === jkFilter;
+
+                return matchText && matchStatus && matchJk;
+            });
+            
+            renderTable(filtered);
+        }
+
+        // ==========================
+        // FITUR EXPORT / IMPORT CSV
+        // ==========================
+        
+        function exportCSV() {
+            const headers = [
+                "NIS", "NISN", "Nama Lengkap", "Jenis Kelamin", "Tempat Lahir", "Tanggal Lahir", 
+                "Agama", "Kewarganegaraan", "Anak Ke", "Jumlah Saudara", "Status Siswa", 
+                "Kelas Sekarang", "Tahun Masuk", "Alamat Lengkap", "No Telp Siswa", 
+                "Asal Sekolah", "Nama Ayah", "Pekerjaan Ayah", "Nama Ibu", "Pekerjaan Ibu", 
+                "No Telp Ortu", "Nama Wali", "Pekerjaan Wali"
+            ];
+
+            const keys = [
+                "nis", "nisn", "nama_lengkap", "jenis_kelamin", "tempat_lahir", "tanggal_lahir",
+                "agama", "kewarganegaraan", "anak_ke", "jumlah_saudara", "status_siswa",
+                "kelas_sekarang", "tahun_masuk", "alamat_lengkap", "no_telp_siswa",
+                "asal_sekolah", "nama_ayah", "pekerjaan_ayah", "nama_ibu", "pekerjaan_ibu",
+                "no_telp_ortu", "nama_wali", "pekerjaan_wali"
+            ];
+
+            let csvContent = headers.join(",") + "\n";
+
+            allData.forEach(row => {
+                let rowData = keys.map(key => {
+                    let val = row[key] === null || row[key] === undefined ? "" : String(row[key]);
+                    // Escape quotes and wrap in quotes if there's a comma
+                    val = val.replace(/"/g, '""');
+                    if (val.search(/("|,|\n)/g) >= 0) {
+                        val = `"${val}"`;
+                    }
+                    return val;
+                });
+                csvContent += rowData.join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `Data_Buku_Induk_${new Date().toISOString().slice(0,10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("File CSV berhasil diunduh!", "success");
+        }
+
+        async function importCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            showToast("Sedang memproses file CSV...", "info");
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const text = e.target.result;
+                
+                // Simple CSV Parser handling quotes and commas/semicolons
+                const rows = [];
+                let currentRow = [];
+                let currentCell = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < text.length; i++) {
+                    const char = text[i];
+                    if (inQuotes) {
+                        if (char === '"' && text[i+1] === '"') {
+                            currentCell += '"';
+                            i++;
+                        } else if (char === '"') {
+                            inQuotes = false;
+                        } else {
+                            currentCell += char;
+                        }
+                    } else {
+                        if (char === '"') {
+                            inQuotes = true;
+                        } else if (char === ',' || char === ';') { 
+                            currentRow.push(currentCell.trim());
+                            currentCell = '';
+                        } else if (char === '\n' || char === '\r') {
+                            if (char === '\r' && text[i+1] === '\n') i++;
+                            currentRow.push(currentCell.trim());
+                            if(currentRow.join('') !== '') rows.push(currentRow);
+                            currentRow = [];
+                            currentCell = '';
+                        } else {
+                            currentCell += char;
+                        }
+                    }
+                }
+                if (currentCell || currentRow.length > 0) {
+                    currentRow.push(currentCell.trim());
+                    rows.push(currentRow);
+                }
+
+                if (rows.length < 2) {
+                    showToast("File CSV kosong atau format tidak sesuai.", "error");
+                    event.target.value = '';
+                    return;
+                }
+
+                // Check First Header to ensure it's the right format
+                if(!rows[0][0].toLowerCase().includes('nis')) {
+                    showToast("Format kolom tidak sesuai. Silakan Export dulu untuk melihat format yang benar.", "error");
+                    event.target.value = '';
+                    return;
+                }
+
+                const expectedKeys = [
+                    "nis", "nisn", "nama_lengkap", "jenis_kelamin", "tempat_lahir", "tanggal_lahir",
+                    "agama", "kewarganegaraan", "anak_ke", "jumlah_saudara", "status_siswa",
+                    "kelas_sekarang", "tahun_masuk", "alamat_lengkap", "no_telp_siswa",
+                    "asal_sekolah", "nama_ayah", "pekerjaan_ayah", "nama_ibu", "pekerjaan_ibu",
+                    "no_telp_ortu", "nama_wali", "pekerjaan_wali"
+                ];
+
+                const insertData = [];
+                for (let i = 1; i < rows.length; i++) {
+                    const row = rows[i];
+                    let obj = {};
+                    let hasData = false;
+                    expectedKeys.forEach((key, index) => {
+                        let val = row[index];
+                        if (val === "" || val === undefined) val = null;
+                        
+                        if(val && (key === 'anak_ke' || key === 'jumlah_saudara')) {
+                            val = parseInt(val) || null;
+                        }
+                        
+                        obj[key] = val;
+                        if(val !== null) hasData = true;
+                    });
+                    
+                    if(hasData && obj.nis && obj.nama_lengkap) {
+                        insertData.push(obj);
+                    }
+                }
+
+                if(insertData.length === 0) {
+                    showToast("Tidak ada data valid untuk diimpor (Pastikan ada kolom NIS dan Nama Lengkap).", "error");
+                    event.target.value = '';
+                    return;
+                }
+
+                try {
+                    const { error } = await supabaseClient
+                        .from('buku_induk')
+                        .insert(insertData);
+
+                    if (error) {
+                        if (error.code === '23505') {
+                            throw new Error('Gagal: Ada NIS ganda dalam file atau NIS sudah terdaftar di sistem.');
+                        }
+                        throw error;
+                    }
+
+                    showToast(`Berhasil mengimpor ${insertData.length} data siswa!`, "success");
+                    fetchData();
+                } catch (err) {
+                    console.error("Import error:", err);
+                    showToast(err.message || "Gagal mengimpor data.", "error");
+                }
+                
+                event.target.value = ''; // Reset input
+            };
+            
+            reader.readAsText(file);
+        }
+
+        function previewImage(event) {
+            const reader = new FileReader();
+            reader.onload = function(){
+                const output = document.getElementById('preview-foto');
+                output.src = reader.result;
+            };
+            if(event.target.files[0]) {
+                reader.readAsDataURL(event.target.files[0]);
+            } else {
+                document.getElementById('preview-foto').src = "https://via.placeholder.com/150?text=Foto";
+            }
+        }
+
+        let currentEditId = null;
+
+        function openFormModal(id = null, isViewOnly = false) {
+            currentEditId = id;
+            const form = document.getElementById('form-add-student');
+            const modal = document.getElementById('modal-add-student');
+            const inputs = form.querySelectorAll('input, select, textarea');
+            
+            // UI Elements
+            const title = document.getElementById('modal-title');
+            const subtitle = document.getElementById('modal-subtitle');
+            const icon = document.getElementById('modal-icon');
+            const iconBg = document.getElementById('modal-icon-bg');
+            const btnSave = document.getElementById('btn-save-modal');
+            const btnSaveText = document.getElementById('btn-save-text');
+            const fotoInputDiv = document.getElementById('f_foto').parentElement; // div yang bungkus input file
+
+            // Reset form first
+            form.reset();
+            document.getElementById('preview-foto').src = "https://via.placeholder.com/150?text=Foto";
+
+            if (id) {
+                // Mode EDIT atau DETAIL
+                const student = allData.find(s => s.id === id);
+                if (student) {
+                    document.getElementById('f_nis').value = student.nis || '';
+                    document.getElementById('f_nisn').value = student.nisn || '';
+                    document.getElementById('f_nama').value = student.nama_lengkap || '';
+                    document.getElementById('f_jk').value = student.jenis_kelamin || '';
+                    document.getElementById('f_tempat_lahir').value = student.tempat_lahir || '';
+                    document.getElementById('f_tgl_lahir').value = student.tanggal_lahir || '';
+                    document.getElementById('f_agama').value = student.agama || '';
+                    document.getElementById('f_warga').value = student.kewarganegaraan || 'WNI';
+                    document.getElementById('f_anak_ke').value = student.anak_ke || '';
+                    document.getElementById('f_jml_sdr').value = student.jumlah_saudara || '';
+                    document.getElementById('f_status').value = student.status_siswa || 'Aktif';
+                    document.getElementById('f_kelas').value = student.kelas_sekarang || '';
+                    document.getElementById('f_tahun').value = student.tahun_masuk || '';
+                    document.getElementById('f_alamat').value = student.alamat_lengkap || '';
+                    document.getElementById('f_telp').value = student.no_telp_siswa || '';
+                    document.getElementById('f_asal_sd').value = student.asal_sekolah || '';
+                    document.getElementById('f_ayah').value = student.nama_ayah || '';
+                    document.getElementById('f_pek_ayah').value = student.pekerjaan_ayah || '';
+                    document.getElementById('f_ibu').value = student.nama_ibu || '';
+                    document.getElementById('f_pek_ibu').value = student.pekerjaan_ibu || '';
+                    document.getElementById('f_telp_ortu').value = student.no_telp_ortu || '';
+                    document.getElementById('f_wali').value = student.nama_wali || '';
+                    document.getElementById('f_pek_wali').value = student.pekerjaan_wali || '';
+                    
+                    if(student.foto_url) {
+                        document.getElementById('preview-foto').src = student.foto_url;
+                    }
+                }
+
+                if (isViewOnly) {
+                    title.innerText = "Detail Profil Siswa";
+                    subtitle.innerText = "Melihat data siswa secara spesifik.";
+                    icon.className = "fas fa-id-badge";
+                    iconBg.className = "w-10 h-10 rounded-lg bg-gray-100 text-gray-600 flex items-center justify-center text-lg";
+                    btnSave.classList.add('hidden');
+                    fotoInputDiv.classList.add('hidden'); // Sembunyikan input file
+                    inputs.forEach(input => input.disabled = true);
+                } else {
+                    title.innerText = "Edit Data Buku Induk";
+                    subtitle.innerText = "Perbarui informasi siswa yang dipilih.";
+                    icon.className = "fas fa-user-edit";
+                    iconBg.className = "w-10 h-10 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center text-lg";
+                    btnSave.classList.remove('hidden');
+                    btnSave.classList.replace('bg-primary', 'bg-accent');
+                    btnSave.classList.replace('hover:bg-blue-800', 'hover:bg-yellow-600');
+                    btnSaveText.innerText = "Update Data";
+                    fotoInputDiv.classList.remove('hidden');
+                    inputs.forEach(input => input.disabled = false);
+                }
+            } else {
+                // Mode TAMBAH BARU
+                title.innerText = "Tambah Data Buku Induk";
+                subtitle.innerText = "Isi form di bawah ini untuk mendaftarkan siswa baru.";
+                icon.className = "fas fa-user-plus";
+                iconBg.className = "w-10 h-10 rounded-lg bg-blue-100 text-primary flex items-center justify-center text-lg";
+                btnSave.classList.remove('hidden');
+                btnSave.classList.replace('bg-accent', 'bg-primary');
+                btnSave.classList.replace('hover:bg-yellow-600', 'hover:bg-blue-800');
+                btnSaveText.innerText = "Simpan ke Database";
+                fotoInputDiv.classList.remove('hidden');
+                inputs.forEach(input => input.disabled = false);
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-add-student').classList.remove('active');
+        }
+
+        // Save or Update Student to Supabase
+        async function saveStudent(event) {
+            event.preventDefault(); // Prevent page reload
+            if(!supabaseClient) {
+                showToast("Koneksi database tidak tersedia", "error");
+                return;
+            }
+
+            const btnSubmit = document.getElementById('btn-save-modal');
+            const originalBtnHtml = btnSubmit.innerHTML;
+            btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+            btnSubmit.disabled = true;
+
+            try {
+                const nisValue = document.getElementById('f_nis').value;
+                let finalFotoUrl = null;
+
+                // 1. UPLOAD FOTO (Jika Ada)
+                const fotoFile = document.getElementById('f_foto').files[0];
+                if(fotoFile) {
+                    if(fotoFile.size > 100 * 1024) {
+                        throw new Error("Ukuran foto terlalu besar! Maksimal hanya 100KB.");
+                    }
+                    
+                    const fileExt = fotoFile.name.split('.').pop();
+                    const fileName = `${nisValue}-${Date.now()}.${fileExt}`;
+                    
+                    const { data: uploadData, error: uploadError } = await supabaseClient
+                        .storage
+                        .from('foto_siswa')
+                        .upload(fileName, fotoFile);
+                        
+                    if(uploadError) throw new Error("Gagal mengupload foto: " + uploadError.message);
+                    
+                    const { data: publicUrlData } = supabaseClient.storage.from('foto_siswa').getPublicUrl(fileName);
+                    finalFotoUrl = publicUrlData.publicUrl;
+                }
+
+                // 2. KUMPULKAN DATA
+                const data = {
+                    nis: nisValue,
+                    nisn: document.getElementById('f_nisn').value || null,
+                    nama_lengkap: document.getElementById('f_nama').value,
+                    jenis_kelamin: document.getElementById('f_jk').value,
+                    tempat_lahir: document.getElementById('f_tempat_lahir').value || null,
+                    tanggal_lahir: document.getElementById('f_tgl_lahir').value || null,
+                    agama: document.getElementById('f_agama').value || null,
+                    kewarganegaraan: document.getElementById('f_warga').value,
+                    anak_ke: document.getElementById('f_anak_ke').value ? parseInt(document.getElementById('f_anak_ke').value) : null,
+                    jumlah_saudara: document.getElementById('f_jml_sdr').value ? parseInt(document.getElementById('f_jml_sdr').value) : null,
+                    status_siswa: document.getElementById('f_status').value,
+                    kelas_sekarang: document.getElementById('f_kelas').value || null,
+                    tahun_masuk: document.getElementById('f_tahun').value || null,
+                    alamat_lengkap: document.getElementById('f_alamat').value || null,
+                    no_telp_siswa: document.getElementById('f_telp').value || null,
+                    asal_sekolah: document.getElementById('f_asal_sd').value || null,
+                    nama_ayah: document.getElementById('f_ayah').value || null,
+                    pekerjaan_ayah: document.getElementById('f_pek_ayah').value || null,
+                    nama_ibu: document.getElementById('f_ibu').value || null,
+                    pekerjaan_ibu: document.getElementById('f_pek_ibu').value || null,
+                    no_telp_ortu: document.getElementById('f_telp_ortu').value || null,
+                    nama_wali: document.getElementById('f_wali').value || null,
+                    pekerjaan_wali: document.getElementById('f_pek_wali').value || null,
+                };
+
+                // Hanya update foto jika ada foto baru diupload
+                if(finalFotoUrl) {
+                    data.foto_url = finalFotoUrl;
+                }
+
+                // 3. INSERT ATAU UPDATE KE DATABASE
+                let error;
+                if (currentEditId) {
+                    // Mode Update
+                    const { error: updateErr } = await supabaseClient
+                        .from('buku_induk')
+                        .update(data)
+                        .eq('id', currentEditId);
+                    error = updateErr;
+                } else {
+                    // Mode Insert Baru
+                    const { error: insertErr } = await supabaseClient
+                        .from('buku_induk')
+                        .insert([data]);
+                    error = insertErr;
+                }
+
+                if (error) {
+                    if (error.code === '23505') { 
+                        throw new Error('NIS tersebut sudah terdaftar.');
+                    }
+                    throw error;
+                }
+
+                showToast(currentEditId ? "Data berhasil diperbarui!" : "Data siswa berhasil ditambahkan!", "success");
+                closeModal();
+                fetchData(); // Refresh table
+            } catch (err) {
+                console.error("Save error:", err);
+                showToast(err.message || "Gagal menyimpan data", "error");
+            } finally {
+                btnSubmit.innerHTML = originalBtnHtml;
+                btnSubmit.disabled = false;
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('bi_session');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
