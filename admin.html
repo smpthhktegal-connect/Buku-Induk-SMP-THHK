@@ -594,6 +594,7 @@
                             <button class="w-8 h-8 rounded-full bg-blue-50 text-secondary hover:bg-secondary hover:text-white transition" title="Lihat Detail" onclick="openFormModal('${student.id}', true)"><i class="fas fa-eye"></i></button>
                             <button class="w-8 h-8 rounded-full bg-amber-50 text-accent hover:bg-accent hover:text-white transition" title="Edit Data" onclick="openFormModal('${student.id}', false)"><i class="fas fa-edit"></i></button>
                             <button class="w-8 h-8 rounded-full bg-green-50 text-green-600 hover:bg-green-600 hover:text-white transition" title="Cetak Lembar PDF" onclick="window.open('print_induk.html?id=${student.id}', '_blank')"><i class="fas fa-print"></i></button>
+                            <button class="w-8 h-8 rounded-full bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition" title="Hapus Data" onclick="deleteStudent('${student.id}', '${student.nama_lengkap.replace(/'/g, "\\'")}')"><i class="fas fa-trash"></i></button>
                         </td>
                     </tr>
                 `;
@@ -1027,6 +1028,27 @@
             } finally {
                 btnSubmit.innerHTML = originalBtnHtml;
                 btnSubmit.disabled = false;
+            }
+        }
+
+        async function deleteStudent(id, nama) {
+            if (!confirm(`Apakah Anda yakin ingin menghapus data siswa bernama "${nama}"? Data yang dihapus tidak dapat dikembalikan.`)) {
+                return;
+            }
+
+            try {
+                const { error } = await supabaseClient
+                    .from('buku_induk')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+
+                showToast(`Data ${nama} berhasil dihapus!`, "success");
+                fetchData(); // Refresh table
+            } catch (err) {
+                console.error("Delete error:", err);
+                showToast(err.message || "Gagal menghapus data", "error");
             }
         }
 
