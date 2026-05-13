@@ -39,15 +39,18 @@
 
         /* Modal Styles */
         .modal-overlay {
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(4px);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease-in-out;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: all 0.3s;
         }
         .modal-overlay.active {
-            opacity: 1;
-            visibility: visible;
+            display: flex;
         }
         .modal-content {
             transform: scale(0.95) translateY(20px);
@@ -82,13 +85,13 @@
         
         <nav class="flex-1 p-4 space-y-2 overflow-y-auto">
             <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 ml-2 mt-4">Menu Utama</p>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/20 text-secondary font-medium">
+            <a href="#top" onclick="document.getElementById('main-scroll-area').scrollTop = 0;" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary/20 text-secondary font-medium">
                 <i class="fas fa-chart-pie w-5"></i> Dashboard
             </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition">
+            <a href="#tabel-data-siswa" onclick="document.getElementById('tabel-data-siswa').scrollIntoView({behavior: 'smooth'})" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition">
                 <i class="fas fa-users w-5"></i> Data Siswa
             </a>
-            <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition">
+            <a href="#" onclick="openReportModal()" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition">
                 <i class="fas fa-print w-5"></i> Cetak Laporan
             </a>
             
@@ -143,7 +146,7 @@
         </header>
 
         <!-- DASHBOARD BODY -->
-        <div class="flex-1 overflow-y-auto p-8">
+        <div id="main-scroll-area" class="flex-1 overflow-y-auto p-8 scroll-smooth relative">
             
             <!-- STATS CARDS -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -186,7 +189,7 @@
             </div>
 
             <!-- MAIN TABLE AREA -->
-            <div class="flex-1 overflow-hidden flex flex-col bg-white border-t border-gray-100">
+            <div id="tabel-data-siswa" class="flex-1 overflow-hidden flex flex-col bg-white border-t border-gray-100 rounded-2xl shadow-sm mt-4">
                 <div class="p-6 border-b border-gray-100 flex flex-col md:flex-row md:justify-between md:items-center bg-gray-50/50 gap-4">
                     <div>
                         <h3 class="text-lg font-bold text-gray-800">Daftar Induk Siswa</h3>
@@ -237,6 +240,9 @@
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-gray-50 sticky top-0 z-10 shadow-sm">
                             <tr>
+                                <th class="py-3 px-6 text-center w-10">
+                                    <input type="checkbox" id="check-all-main" onchange="toggleSelectAllMain(this.checked)" class="w-4 h-4 rounded text-primary focus:ring-primary">
+                                </th>
                                 <th class="py-3 px-6 text-xs font-bold text-gray-500 uppercase">NIS / NISN</th>
                                 <th class="py-3 px-6 text-xs font-bold text-gray-500 uppercase">Nama Lengkap</th>
                                 <th class="py-3 px-6 text-xs font-bold text-gray-500 uppercase">Kelas</th>
@@ -254,6 +260,49 @@
 
         </div>
     </main>
+
+    <!-- MODAL CETAK LAPORAN -->
+    <div id="modal-cetak-laporan" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-green-100 text-green-600 flex items-center justify-center text-lg">
+                        <i class="fas fa-print"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">Cetak Laporan</h2>
+                        <p class="text-xs text-gray-500">Pilih jenis laporan yang ingin dicetak atau diunduh</p>
+                    </div>
+                </div>
+                <button onclick="closeReportModal()" class="text-gray-400 hover:text-red-500 transition"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-6 flex flex-col gap-4">
+                <button onclick="exportCSV(); closeReportModal();" class="flex items-center gap-4 p-4 border border-gray-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition text-left group">
+                    <div class="w-12 h-12 bg-gray-100 group-hover:bg-green-100 text-green-600 rounded-lg flex items-center justify-center text-2xl transition">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-800 group-hover:text-green-700">Export Rekap Excel (CSV)</h3>
+                        <p class="text-xs text-gray-500 mt-1">Unduh seluruh data tabel yang saat ini ditampilkan ke dalam format Excel.</p>
+                    </div>
+                </button>
+                
+                <button onclick="cetakMassal()" class="flex items-center gap-4 p-4 border border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition text-left group">
+                    <div class="w-12 h-12 bg-gray-100 group-hover:bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-2xl transition">
+                        <i class="fas fa-file-pdf"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-gray-800 group-hover:text-blue-700">Cetak Buku Induk Massal (PDF)</h3>
+                        <p class="text-xs text-gray-500 mt-1">Cetak lembar buku induk untuk siswa yang Anda centang di tabel.</p>
+                    </div>
+                </button>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end">
+                <button onclick="closeReportModal()" class="px-6 py-2 rounded-xl text-sm font-bold text-gray-600 bg-white border border-gray-300 hover:bg-gray-100 transition shadow-sm">Tutup</button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL KENAIKAN KELAS -->
     <div id="modal-kenaikan" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -770,6 +819,9 @@
 
                 html += `
                     <tr class="hover:bg-blue-50/50 transition">
+                        <td class="py-4 px-6 text-center">
+                            <input type="checkbox" class="cb-siswa-main w-4 h-4 rounded text-primary focus:ring-primary" value="${student.id}">
+                        </td>
                         <td class="py-4 px-6 flex items-center gap-3">
                             <img src="${avatar}" class="w-10 h-10 rounded-full object-cover border border-gray-200 shadow-sm" alt="Foto">
                             <div>
@@ -1546,6 +1598,30 @@
         function logout() {
             localStorage.removeItem('bi_session');
             window.location.href = 'index.html';
+        }
+
+        function openReportModal() {
+            document.getElementById('modal-cetak-laporan').classList.add('active');
+        }
+        function closeReportModal() {
+            document.getElementById('modal-cetak-laporan').classList.remove('active');
+        }
+
+        function toggleSelectAllMain(isChecked) {
+            const checkboxes = document.querySelectorAll('.cb-siswa-main');
+            checkboxes.forEach(cb => cb.checked = isChecked);
+        }
+
+        function cetakMassal() {
+            const checkboxes = document.querySelectorAll('.cb-siswa-main:checked');
+            if (checkboxes.length === 0) {
+                alert("Silakan pilih minimal satu siswa dari tabel terlebih dahulu.");
+                closeReportModal();
+                return;
+            }
+
+            const ids = Array.from(checkboxes).map(cb => cb.value).join(',');
+            window.open(`print_induk.html?ids=${ids}`, '_blank');
         }
     </script>
 </body>
