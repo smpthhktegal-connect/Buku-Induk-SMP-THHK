@@ -1,0 +1,4 @@
+NIS,NISN,Nama Lengkap,Jenis Kelamin,Tempat Lahir,Tanggal Lahir,Agama,Kewarganegaraan,Anak Ke,Jumlah Saudara,Status Siswa,Kelas Sekarang,Tahun Masuk,Alamat Lengkap,No Telp Siswa,Asal Sekolah,Nama Ayah,Pekerjaan Ayah,Nama Ibu,Pekerjaan Ibu,No Telp Ortu,Nama Wali,Pekerjaan Wali
+1819001,0061234567,Budi Santoso,Laki-laki,Jakarta,2006-05-14,Islam,WNI,1,2,Lulus,Alumni,2018/2019,Jl. Merdeka No 1,08123456789,SDN 1 Jakarta,Hasan,PNS,Siti,Ibu Rumah Tangga,08198765432,,
+1819002,0067654321,Siti Aminah,Perempuan,Bandung,2006-08-21,Islam,WNI,2,3,Lulus,Alumni,2018/2019,Jl. Sudirman No 5,08133344455,SDN 2 Bandung,Ahmad,Wiraswasta,Nurul,PNS,08122233344,,
+,,Hapus 2 baris contoh di atas sebelum melakukan import.,,,,,,,,,,,,,,,,,,,,

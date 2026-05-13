@@ -131,6 +131,10 @@
                 <h2 class="text-lg font-bold text-gray-800">Dashboard Statistik</h2>
             </div>
             <div class="flex items-center gap-4">
+                <div id="academic-year-badge" class="hidden md:flex flex-col items-end mr-4">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tahun Pelajaran</span>
+                    <span id="header-academic-year" class="text-sm font-bold text-primary bg-blue-50 px-3 py-1 rounded-lg border border-blue-100">Memuat...</span>
+                </div>
                 <div class="relative">
                     <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                     <input type="text" id="admin-search" oninput="handleSearch()" placeholder="Cari NIS / Nama..." class="pl-10 pr-4 py-2 border border-gray-200 rounded-full text-sm focus:outline-none focus:border-secondary w-64 bg-gray-50">
@@ -203,6 +207,10 @@
                             <option value="Laki-laki">Gender: Laki-laki</option>
                             <option value="Perempuan">Gender: Perempuan</option>
                         </select>
+
+                        <select id="filter-tahun" onchange="handleSearch()" class="px-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:border-secondary text-gray-600 bg-white shadow-sm font-medium">
+                            <option value="">Semua Thn Masuk</option>
+                        </select>
                         
                         <div class="w-px h-8 bg-gray-300 mx-1"></div> <!-- Separator -->
                         
@@ -217,6 +225,9 @@
                             <input type="file" id="file-import-csv" accept=".csv" class="hidden" onchange="importCSV(event)">
                         </div>
 
+                        <button onclick="openKenaikanModal()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md transition flex items-center gap-2">
+                            <i class="fas fa-level-up-alt"></i> Naik Kelas
+                        </button>
                         <button onclick="openFormModal()" class="bg-secondary hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-md transition flex items-center gap-2">
                             <i class="fas fa-plus"></i> Tambah Data
                         </button>
@@ -243,6 +254,60 @@
 
         </div>
     </main>
+
+    <!-- MODAL KENAIKAN KELAS -->
+    <div id="modal-kenaikan" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center text-lg">
+                        <i class="fas fa-level-up-alt"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">Proses Kenaikan Kelas</h2>
+                        <p class="text-xs text-gray-500">Pindahkan rombongan belajar secara massal</p>
+                    </div>
+                </div>
+                <button onclick="closeKenaikanModal()" class="text-gray-400 hover:text-red-500 transition"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-6 flex-1 overflow-y-auto custom-scroll">
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="input-group">
+                        <label>Kelas Asal (Saat Ini)</label>
+                        <select id="k_kelas_asal" class="form-control" onchange="loadSiswaKenaikan()">
+                            <option value="">-- Pilih Kelas --</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Kelas Tujuan (Naik Ke)</label>
+                        <input type="text" id="k_kelas_tujuan" class="form-control" placeholder="Contoh: 8A atau ketik LULUS">
+                        <p class="text-[10px] text-gray-500 mt-1">Ketik "LULUS" jika rombongan ini lulus.</p>
+                    </div>
+                </div>
+
+                <div class="border border-gray-200 rounded-xl overflow-hidden">
+                    <div class="bg-gray-50 px-4 py-3 flex justify-between items-center border-b border-gray-200">
+                        <label class="flex items-center gap-2 text-sm font-bold text-gray-700 cursor-pointer">
+                            <input type="checkbox" id="check-all-kenaikan" class="w-4 h-4 rounded text-purple-600 focus:ring-purple-500" onchange="toggleAllKenaikan(this.checked)" checked>
+                            Pilih Semua Siswa
+                        </label>
+                        <span id="k_count" class="text-xs font-bold text-white bg-purple-500 px-2 py-1 rounded">0 Siswa</span>
+                    </div>
+                    <div class="max-h-64 overflow-y-auto bg-white p-2" id="k_student_list">
+                        <p class="text-center text-sm text-gray-400 py-4">Pilih kelas asal terlebih dahulu.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+                <button onclick="closeKenaikanModal()" class="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-600 bg-white border border-gray-300 hover:bg-gray-100 transition shadow-sm">Batal</button>
+                <button onclick="prosesKenaikan()" class="px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-purple-600 hover:bg-purple-700 transition shadow-lg flex items-center gap-2">
+                    <i class="fas fa-check-circle"></i> Proses Sekarang
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL TAMBAH DATA SISWA -->
     <div id="modal-add-student" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -646,6 +711,7 @@
 
                 if (error) throw error;
                 allData = data || [];
+                populateFilterTahun();
                 renderTable(allData);
                 calculateStats(allData);
             } catch (err) {
@@ -727,10 +793,29 @@
             tbody.innerHTML = html;
         }
 
+        function populateFilterTahun() {
+            const dropdown = document.getElementById('filter-tahun');
+            if(!dropdown) return;
+            const tahunSet = new Set();
+            allData.forEach(s => {
+                if(s.tahun_masuk) tahunSet.add(s.tahun_masuk);
+            });
+            const tahunArray = Array.from(tahunSet).sort((a,b) => b.localeCompare(a)); // Descending
+            
+            const currentVal = dropdown.value;
+            let html = '<option value="">Semua Thn Masuk</option>';
+            tahunArray.forEach(t => {
+                html += `<option value="${t}">Thn Masuk: ${t}</option>`;
+            });
+            dropdown.innerHTML = html;
+            dropdown.value = currentVal;
+        }
+
         function handleSearch() {
             const query = document.getElementById('admin-search').value.toLowerCase();
             const statusFilter = document.getElementById('filter-status').value;
             const jkFilter = document.getElementById('filter-jk').value;
+            const tahunFilter = document.getElementById('filter-tahun') ? document.getElementById('filter-tahun').value : '';
             
             const filtered = allData.filter(s => {
                 // Teks Search
@@ -745,7 +830,10 @@
                 // Dropdown Gender
                 const matchJk = !jkFilter || s.jenis_kelamin === jkFilter;
 
-                return matchText && matchStatus && matchJk;
+                // Dropdown Tahun
+                const matchTahun = !tahunFilter || s.tahun_masuk === tahunFilter;
+
+                return matchText && matchStatus && matchJk && matchTahun;
             });
             
             renderTable(filtered);
@@ -874,7 +962,17 @@
             localStorage.setItem('bi_app_config', JSON.stringify({ tahun, semester }));
             showToast("Konfigurasi aplikasi diperbarui", "success");
             closeAppConfigModal();
+            updateHeaderAcademicYear(); // Update UI
         }
+
+        function updateHeaderAcademicYear() {
+            const conf = JSON.parse(localStorage.getItem('bi_app_config')) || { tahun: '2024/2025', semester: 'Ganjil' };
+            const badge = document.getElementById('header-academic-year');
+            if(badge) badge.innerText = `${conf.tahun} - ${conf.semester}`;
+        }
+        
+        // Panggil saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', updateHeaderAcademicYear);
 
         // ==========================
         // FITUR EXPORT / IMPORT CSV
@@ -1169,6 +1267,21 @@
             btnSubmit.disabled = true;
 
             try {
+                // --- PERINGATAN CERDAS (ANTI-LUPA TAHUN AJARAN) ---
+                const inputTahunMasuk = document.getElementById('f_tahun').value;
+                if (!currentEditId && inputTahunMasuk) {
+                    const conf = JSON.parse(localStorage.getItem('bi_app_config')) || { tahun: '2024/2025' };
+                    if (inputTahunMasuk !== conf.tahun) {
+                        const proceed = confirm(`PERINGATAN: Anda memasukkan Tahun Masuk "${inputTahunMasuk}", tetapi Tahun Ajaran Aktif saat ini adalah "${conf.tahun}".\n\nApakah Anda yakin ingin melanjutkan?\n(Jika Anda lupa mengganti tahun ajaran, klik Cancel/Batal dan ubah di menu Pengaturan).`);
+                        if (!proceed) {
+                            btnSubmit.innerHTML = originalBtnHtml;
+                            btnSubmit.disabled = false;
+                            return;
+                        }
+                    }
+                }
+                // ----------------------------------------------------
+
                 const nisValue = document.getElementById('f_nis').value;
                 let finalFotoUrl = null;
 
@@ -1299,6 +1412,131 @@
             } catch (err) {
                 console.error("Delete error:", err);
                 showToast(err.message || "Gagal menghapus data", "error");
+            }
+        }
+
+        // --- FITUR KENAIKAN KELAS ---
+        function openKenaikanModal() {
+            document.getElementById('modal-kenaikan').classList.add('active');
+            populateKelasDropdown();
+            document.getElementById('k_student_list').innerHTML = '<p class="text-center text-sm text-gray-400 py-4">Pilih kelas asal terlebih dahulu.</p>';
+            document.getElementById('k_count').innerText = '0 Siswa';
+            document.getElementById('k_kelas_tujuan').value = '';
+        }
+
+        function closeKenaikanModal() {
+            document.getElementById('modal-kenaikan').classList.remove('active');
+        }
+
+        function populateKelasDropdown() {
+            const dropdown = document.getElementById('k_kelas_asal');
+            const kelasSet = new Set();
+            allData.forEach(s => {
+                if(s.status_siswa === 'Aktif' && s.kelas_sekarang) {
+                    kelasSet.add(s.kelas_sekarang);
+                }
+            });
+            const kelasiArray = Array.from(kelasSet).sort();
+            
+            let html = '<option value="">-- Pilih Kelas --</option>';
+            kelasiArray.forEach(k => {
+                html += `<option value="${k}">${k}</option>`;
+            });
+            dropdown.innerHTML = html;
+        }
+
+        function loadSiswaKenaikan() {
+            const kelas = document.getElementById('k_kelas_asal').value;
+            const container = document.getElementById('k_student_list');
+            
+            if(!kelas) {
+                container.innerHTML = '<p class="text-center text-sm text-gray-400 py-4">Pilih kelas asal terlebih dahulu.</p>';
+                document.getElementById('k_count').innerText = '0 Siswa';
+                return;
+            }
+
+            const siswa = allData.filter(s => s.status_siswa === 'Aktif' && s.kelas_sekarang === kelas);
+            
+            if(siswa.length === 0) {
+                container.innerHTML = '<p class="text-center text-sm text-gray-400 py-4">Tidak ada siswa di kelas ini.</p>';
+                document.getElementById('k_count').innerText = '0 Siswa';
+                return;
+            }
+
+            document.getElementById('k_count').innerText = `${siswa.length} Siswa`;
+            document.getElementById('check-all-kenaikan').checked = true;
+
+            let html = '';
+            siswa.forEach(s => {
+                html += `
+                    <label class="flex items-center gap-3 p-2 hover:bg-purple-50 rounded-lg cursor-pointer border-b border-gray-50 last:border-0 transition">
+                        <input type="checkbox" class="cb-siswa-kenaikan w-4 h-4 rounded text-purple-600 focus:ring-purple-500" value="${s.id}" checked>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-gray-800">${s.nama_lengkap}</p>
+                            <p class="text-[10px] text-gray-500">NIS: ${s.nis || '-'}</p>
+                        </div>
+                    </label>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        function toggleAllKenaikan(isChecked) {
+            const checkboxes = document.querySelectorAll('.cb-siswa-kenaikan');
+            checkboxes.forEach(cb => cb.checked = isChecked);
+        }
+
+        async function prosesKenaikan() {
+            const kelasAsal = document.getElementById('k_kelas_asal').value;
+            let kelasTujuan = document.getElementById('k_kelas_tujuan').value.trim();
+            
+            if(!kelasAsal) { showToast("Pilih kelas asal terlebih dahulu", "error"); return; }
+            if(!kelasTujuan) { showToast("Masukkan kelas tujuan", "error"); return; }
+            
+            const checkboxes = document.querySelectorAll('.cb-siswa-kenaikan:checked');
+            if(checkboxes.length === 0) { showToast("Tidak ada siswa yang dipilih", "error"); return; }
+
+            if(!confirm(`Anda yakin ingin memproses ${checkboxes.length} siswa dari kelas ${kelasAsal} ke "${kelasTujuan}"?`)) return;
+
+            const isLulus = kelasTujuan.toUpperCase() === 'LULUS';
+            const statusUpdate = isLulus ? 'Lulus' : 'Aktif';
+            if (isLulus) kelasTujuan = 'Alumni';
+
+            const idsToUpdate = Array.from(checkboxes).map(cb => cb.value);
+            showToast("Sedang memproses, mohon tunggu...", "info");
+
+            try {
+                const { error } = await supabaseClient
+                    .from('buku_induk')
+                    .update({ 
+                        kelas_sekarang: kelasTujuan,
+                        status_siswa: statusUpdate
+                    })
+                    .in('id', idsToUpdate);
+
+                if (error) throw error;
+
+                // --- ARSIP RIWAYAT KELAS ---
+                const conf = JSON.parse(localStorage.getItem('bi_app_config')) || { tahun: '2024/2025' };
+                const riwayatPayload = idsToUpdate.map(id => ({
+                    siswa_id: id,
+                    tahun_ajaran: conf.tahun,
+                    kelas: kelasTujuan
+                }));
+                
+                try {
+                    await supabaseClient.from('riwayat_kelas').insert(riwayatPayload);
+                } catch(historyErr) {
+                    console.warn("Tabel riwayat_kelas belum ada atau error:", historyErr);
+                }
+                // ---------------------------
+
+                showToast(`Berhasil memproses ${idsToUpdate.length} siswa!`, "success");
+                closeKenaikanModal();
+                fetchData(); // Refresh UI
+            } catch (err) {
+                console.error("Kenaikan error:", err);
+                showToast("Gagal memproses data", "error");
             }
         }
 
