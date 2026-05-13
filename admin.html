@@ -921,25 +921,39 @@
                 const nisValue = document.getElementById('f_nis').value;
                 let finalFotoUrl = null;
 
-                // 1. UPLOAD FOTO (Jika Ada)
+                // 1. UPLOAD FOTO (Jika Ada) Menggunakan Cloudflare R2
                 const fotoFile = document.getElementById('f_foto').files[0];
                 if(fotoFile) {
-                    if(fotoFile.size > 100 * 1024) {
-                        throw new Error("Ukuran foto terlalu besar! Maksimal hanya 100KB.");
+                    if(fotoFile.size > 150 * 1024) {
+                        throw new Error("Ukuran foto terlalu besar! Maksimal hanya 150KB.");
                     }
                     
                     const fileExt = fotoFile.name.split('.').pop();
                     const fileName = `${nisValue}-${Date.now()}.${fileExt}`;
                     
-                    const { data: uploadData, error: uploadError } = await supabaseClient
-                        .storage
-                        .from('foto_siswa')
-                        .upload(fileName, fotoFile);
-                        
-                    if(uploadError) throw new Error("Gagal mengupload foto: " + uploadError.message);
+                    // a. Minta Presigned URL dari Cloudflare Worker
+                    const workerUrl = 'https://api-upload-foto.bukuinduk-thhk.workers.dev';
+                    const presignRes = await fetch(workerUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ fileName: fileName })
+                    });
                     
-                    const { data: publicUrlData } = supabaseClient.storage.from('foto_siswa').getPublicUrl(fileName);
-                    finalFotoUrl = publicUrlData.publicUrl;
+                    if (!presignRes.ok) throw new Error("Gagal terhubung ke Cloudflare Worker.");
+                    const { uploadUrl } = await presignRes.json();
+                    
+                    // b. Upload langsung ke R2
+                    const uploadRes = await fetch(uploadUrl, {
+                        method: 'PUT',
+                        body: fotoFile,
+                        headers: { 'Content-Type': fotoFile.type }
+                    });
+                        
+                    if(!uploadRes.ok) throw new Error("Gagal mengupload foto ke penyimpanan R2.");
+                    
+                    // c. Simpan URL Publik (GANTI DENGAN URL PUBLIC R2 ANDA NANTI)
+                    const publicR2Domain = 'https://pub-1e4578f321af4fc0ba55f7ac2f87f27f.r2.dev'; 
+                    finalFotoUrl = `${publicR2Domain}/${fileName}`;
                 }
 
                 // 2. KUMPULKAN DATA
