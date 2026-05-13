@@ -727,11 +727,14 @@
             let alumni = 0;
 
             data.forEach(s => {
-                if(s.status_siswa === 'Aktif') {
+                const status = (s.status_siswa || '').toLowerCase();
+                const jk = (s.jenis_kelamin || '').toLowerCase();
+                
+                if(status === 'aktif') {
                     active++;
-                    if(s.jenis_kelamin === 'Laki-laki') male++;
-                    if(s.jenis_kelamin === 'Perempuan') female++;
-                } else if (s.status_siswa === 'Lulus') {
+                    if(jk === 'laki-laki') male++;
+                    if(jk === 'perempuan') female++;
+                } else if (status === 'lulus') {
                     alumni++;
                 }
             });
@@ -825,10 +828,10 @@
                     (s.nisn && s.nisn.toLowerCase().includes(query));
                 
                 // Dropdown Status
-                const matchStatus = !statusFilter || s.status_siswa === statusFilter;
+                const matchStatus = !statusFilter || (s.status_siswa || '').toLowerCase() === statusFilter.toLowerCase();
                 
                 // Dropdown Gender
-                const matchJk = !jkFilter || s.jenis_kelamin === jkFilter;
+                const matchJk = !jkFilter || (s.jenis_kelamin || '').toLowerCase() === jkFilter.toLowerCase();
 
                 // Dropdown Tahun
                 const matchTahun = !tahunFilter || s.tahun_masuk === tahunFilter;
