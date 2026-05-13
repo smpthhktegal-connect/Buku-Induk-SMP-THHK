@@ -474,19 +474,107 @@
                         <h3 class="font-bold text-gray-800">Manajemen Akun Staf</h3>
                         <p class="text-xs text-gray-500">Kelola akun Admin & Guru</p>
                     </div>
-                    <button class="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-blue-800 transition">Buka</button>
+                    <button onclick="openStaffModal()" class="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-blue-800 transition">Buka</button>
                 </div>
-                <div class="p-4 border border-gray-200 rounded-xl flex items-center justify-between opacity-50 cursor-not-allowed">
+                <div class="p-4 border border-blue-100 bg-blue-50/50 rounded-xl flex items-center justify-between">
                     <div>
                         <h3 class="font-bold text-gray-800">Tahun Ajaran Aktif</h3>
-                        <p class="text-xs text-gray-500">Pengaturan akan datang</p>
+                        <p class="text-xs text-gray-500">Ubah Semester & Tahun Ajaran</p>
                     </div>
-                    <i class="fas fa-lock text-gray-400"></i>
+                    <button onclick="openAppConfigModal()" class="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-blue-800 transition">Ubah</button>
                 </div>
             </div>
             <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end">
                 <button onclick="closeSettingsModal()" class="px-6 py-2.5 rounded-xl text-sm font-bold text-gray-600 bg-white border border-gray-300 hover:bg-gray-100 transition shadow-sm">Tutup</button>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL STAFF MANAGEMENT -->
+    <div id="modal-staff" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h2 class="text-lg font-bold text-gray-800"><i class="fas fa-users-cog mr-2"></i> Manajemen Akun Staf</h2>
+                <button onclick="closeStaffModal()" class="text-gray-400 hover:text-red-500 transition"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto custom-scroll flex-1">
+                <!-- Form Add Staff -->
+                <form id="form-staff" onsubmit="saveStaff(event)" class="bg-blue-50/50 p-4 rounded-xl border border-blue-100 mb-6 hidden">
+                    <h3 class="font-bold text-primary mb-3 text-sm">Form Data Staf Baru</h3>
+                    <input type="hidden" id="s_id">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="input-group">
+                            <label>Nama Lengkap</label>
+                            <input type="text" id="s_nama" required class="form-control" placeholder="Nama Guru / Staf">
+                        </div>
+                        <div class="input-group">
+                            <label>Username</label>
+                            <input type="text" id="s_username" required class="form-control" placeholder="username_login">
+                        </div>
+                        <div class="input-group">
+                            <label>Password</label>
+                            <input type="password" id="s_password" class="form-control" placeholder="Biarkan kosong jika tidak diubah">
+                        </div>
+                        <div class="input-group">
+                            <label>Role Akses</label>
+                            <select id="s_role" class="form-control">
+                                <option value="Guru">Guru</option>
+                                <option value="Admin">Administrator</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end gap-2">
+                        <button type="button" onclick="document.getElementById('form-staff').classList.add('hidden')" class="px-4 py-2 text-xs font-bold bg-white border border-gray-300 rounded-lg hover:bg-gray-100 text-gray-600">Batal</button>
+                        <button type="submit" class="px-4 py-2 text-xs font-bold bg-primary text-white rounded-lg hover:bg-blue-800">Simpan Staf</button>
+                    </div>
+                </form>
+
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-bold text-gray-700 text-sm">Daftar Akun Sistem</h3>
+                    <button onclick="openStaffForm()" class="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-bold hover:bg-green-600 transition"><i class="fas fa-plus mr-1"></i> Tambah Akun</button>
+                </div>
+                
+                <div class="overflow-x-auto border border-gray-200 rounded-xl">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-gray-50 border-b border-gray-200 text-gray-600">
+                            <tr>
+                                <th class="py-3 px-4">Nama Lengkap</th>
+                                <th class="py-3 px-4">Username</th>
+                                <th class="py-3 px-4">Role</th>
+                                <th class="py-3 px-4 text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="staff-table-body" class="divide-y divide-gray-100">
+                            <!-- Injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL APP CONFIG -->
+    <div id="modal-app-config" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <h2 class="text-lg font-bold text-gray-800"><i class="fas fa-sliders-h mr-2"></i> Konfigurasi Aplikasi</h2>
+                <button onclick="closeAppConfigModal()" class="text-gray-400 hover:text-red-500 transition"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <form onsubmit="saveAppConfig(event)" class="p-6 space-y-4">
+                <div class="input-group">
+                    <label>Tahun Ajaran Aktif</label>
+                    <input type="text" id="c_tahun" class="form-control" placeholder="Contoh: 2024/2025" required>
+                </div>
+                <div class="input-group">
+                    <label>Semester Aktif</label>
+                    <select id="c_semester" class="form-control" required>
+                        <option value="Ganjil">Ganjil</option>
+                        <option value="Genap">Genap</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full mt-4 px-4 py-2.5 bg-primary text-white text-sm font-bold rounded-xl hover:bg-blue-800 transition">Simpan Perubahan</button>
+            </form>
         </div>
     </div>
 
@@ -663,12 +751,129 @@
             renderTable(filtered);
         }
 
-        // SETTINGS MODAL
+        // ==========================
+        // FITUR PENGATURAN SISTEM
+        // ==========================
         function openSettingsModal() {
             document.getElementById('modal-settings').classList.add('active');
         }
         function closeSettingsModal() {
             document.getElementById('modal-settings').classList.remove('active');
+        }
+
+        // --- STAFF MANAGEMENT ---
+        async function fetchStaff() {
+            try {
+                const { data, error } = await supabaseClient.from('users_staff').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                const tbody = document.getElementById('staff-table-body');
+                tbody.innerHTML = data.map(s => `
+                    <tr>
+                        <td class="py-2 px-4 font-semibold text-gray-800">${s.nama_lengkap}</td>
+                        <td class="py-2 px-4 text-gray-500">${s.username}</td>
+                        <td class="py-2 px-4"><span class="px-2 py-1 text-[10px] uppercase tracking-wider font-bold rounded-md ${s.role === 'Admin' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'}">${s.role}</span></td>
+                        <td class="py-2 px-4 text-center space-x-1">
+                            <button onclick="editStaff('${s.id}', '${s.nama_lengkap}', '${s.username}', '${s.role}')" class="text-accent hover:text-amber-600"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteStaff('${s.id}', '${s.username}')" class="text-red-400 hover:text-red-600"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error(err);
+                document.getElementById('staff-table-body').innerHTML = '<tr><td colspan="4" class="text-center py-4 text-red-500 text-xs">Gagal memuat atau tabel belum ada</td></tr>';
+            }
+        }
+
+        function openStaffModal() {
+            closeSettingsModal();
+            document.getElementById('modal-staff').classList.add('active');
+            fetchStaff();
+        }
+        
+        function closeStaffModal() {
+            document.getElementById('modal-staff').classList.remove('active');
+        }
+
+        function openStaffForm() {
+            document.getElementById('form-staff').classList.remove('hidden');
+            document.getElementById('form-staff').reset();
+            document.getElementById('s_id').value = '';
+        }
+
+        function editStaff(id, nama, username, role) {
+            openStaffForm();
+            document.getElementById('s_id').value = id;
+            document.getElementById('s_nama').value = nama;
+            document.getElementById('s_username').value = username;
+            document.getElementById('s_role').value = role;
+        }
+
+        async function saveStaff(e) {
+            e.preventDefault();
+            const id = document.getElementById('s_id').value;
+            const nama = document.getElementById('s_nama').value;
+            const username = document.getElementById('s_username').value;
+            const pass = document.getElementById('s_password').value;
+            const role = document.getElementById('s_role').value;
+
+            const payload = { nama_lengkap: nama, username: username, role: role };
+            if (pass) payload.password_hash = pass; // Di production harus dihash
+
+            try {
+                if (id) {
+                    const { error } = await supabaseClient.from('users_staff').update(payload).eq('id', id);
+                    if (error) throw error;
+                    showToast("Staff diupdate", "success");
+                } else {
+                    if(!pass) throw new Error("Password wajib diisi untuk staf baru");
+                    const { error } = await supabaseClient.from('users_staff').insert(payload);
+                    if (error) throw error;
+                    showToast("Staff ditambahkan", "success");
+                }
+                document.getElementById('form-staff').classList.add('hidden');
+                fetchStaff();
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        }
+
+        async function deleteStaff(id, uname) {
+            if(!confirm(`Hapus akun ${uname}?`)) return;
+            try {
+                const { error } = await supabaseClient.from('users_staff').delete().eq('id', id);
+                if (error) throw error;
+                showToast("Akun dihapus", "success");
+                fetchStaff();
+            } catch (err) {
+                showToast(err.message, "error");
+            }
+        }
+
+        // --- APP CONFIGURATION ---
+        function loadLocalConfig() {
+            // Gunakan LocalStorage untuk simulasi konfigurasi sistem
+            const conf = JSON.parse(localStorage.getItem('bi_app_config')) || { tahun: '2024/2025', semester: 'Ganjil' };
+            document.getElementById('c_tahun').value = conf.tahun;
+            document.getElementById('c_semester').value = conf.semester;
+        }
+
+        function openAppConfigModal() {
+            closeSettingsModal();
+            loadLocalConfig();
+            document.getElementById('modal-app-config').classList.add('active');
+        }
+
+        function closeAppConfigModal() {
+            document.getElementById('modal-app-config').classList.remove('active');
+        }
+
+        function saveAppConfig(e) {
+            e.preventDefault();
+            const tahun = document.getElementById('c_tahun').value;
+            const semester = document.getElementById('c_semester').value;
+            localStorage.setItem('bi_app_config', JSON.stringify({ tahun, semester }));
+            showToast("Konfigurasi aplikasi diperbarui", "success");
+            closeAppConfigModal();
         }
 
         // ==========================
