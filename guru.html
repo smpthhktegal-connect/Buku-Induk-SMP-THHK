@@ -28,6 +28,29 @@
     
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(5px);
+            display: none !important;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active {
+            display: flex !important;
+        }
+        .modal-content {
+            transform: scale(0.95) translateY(20px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+        .val-text { font-weight: 600; color: #1e293b; }
     </style>
 </head>
 <body class="flex flex-col h-screen overflow-hidden">
@@ -95,6 +118,113 @@
         </div>
 
     </main>
+
+    <!-- MODAL DETAIL SISWA (READ-ONLY) -->
+    <div id="modal-detail" class="modal-overlay fixed inset-0 z-50 items-center justify-center p-4">
+        <div class="modal-content bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-blue-100 text-primary flex items-center justify-center text-lg">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-800">Profil Lengkap Siswa</h2>
+                        <p class="text-xs text-gray-500">Melihat detail data induk dan histori kelas.</p>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-red-500 transition"><i class="fas fa-times text-xl"></i></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 overflow-y-auto">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+                    <!-- Foto -->
+                    <div class="md:col-span-3">
+                        <div class="w-full aspect-[3/4] bg-gray-100 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center overflow-hidden">
+                            <img id="d_foto" src="" class="w-full h-full object-cover hidden">
+                            <i id="d_foto_placeholder" class="fas fa-user text-5xl text-gray-300"></i>
+                        </div>
+                        <div class="mt-4 p-3 bg-blue-50 rounded-lg text-center">
+                            <p class="text-[10px] text-blue-600 font-bold uppercase">Status Siswa</p>
+                            <p id="d_status" class="font-bold text-primary">-</p>
+                        </div>
+                    </div>
+
+                    <!-- Data Detail -->
+                    <div class="md:col-span-9 space-y-6">
+                        <!-- Identitas Dasar -->
+                        <div>
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <span class="w-1 h-3 bg-blue-500 rounded-full"></span> Identitas Diri
+                            </h3>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                                <div><p class="text-gray-500">Nama Lengkap</p><p id="d_nama" class="val-text">-</p></div>
+                                <div><p class="text-gray-500">NIS / NISN</p><p id="d_nis_nisn" class="val-text">-</p></div>
+                                <div><p class="text-gray-500">Jenis Kelamin</p><p id="d_jk" class="val-text">-</p></div>
+                                <div><p class="text-gray-500">TTL</p><p id="d_ttl" class="val-text">-</p></div>
+                                <div><p class="text-gray-500">Agama</p><p id="d_agama" class="val-text">-</p></div>
+                                <div><p class="text-gray-500">Kewarganegaraan</p><p id="d_warga" class="val-text">-</p></div>
+                                <div class="col-span-full"><p class="text-gray-500">Alamat Lengkap</p><p id="d_alamat" class="val-text">-</p></div>
+                            </div>
+                        </div>
+
+                        <!-- Data Akademik & Ortu -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <span class="w-1 h-3 bg-blue-500 rounded-full"></span> Data Sekolah
+                                </h3>
+                                <div class="space-y-2 text-sm">
+                                    <p class="flex justify-between"><span>Asal Sekolah:</span> <span id="d_asal_sd" class="val-text">-</span></p>
+                                    <p class="flex justify-between"><span>Kelas Sekarang:</span> <span id="d_kelas" class="val-text">-</span></p>
+                                    <p class="flex justify-between"><span>Tahun Masuk:</span> <span id="d_tahun" class="val-text">-</span></p>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <span class="w-1 h-3 bg-blue-500 rounded-full"></span> Orang Tua / Wali
+                                </h3>
+                                <div class="space-y-2 text-sm">
+                                    <p class="flex justify-between"><span>Nama Ayah:</span> <span id="d_ayah" class="val-text">-</span></p>
+                                    <p class="flex justify-between"><span>Nama Ibu:</span> <span id="d_ibu" class="val-text">-</span></p>
+                                    <p class="flex justify-between"><span>Telepon Ortu:</span> <span id="d_telp_ortu" class="val-text">-</span></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RIWAYAT KELAS -->
+                        <div class="border-t border-gray-100 pt-6">
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                <i class="fas fa-history text-blue-400"></i> Histori Kenaikan Kelas
+                            </h3>
+                            <div class="bg-gray-50 rounded-xl overflow-hidden border border-gray-100">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-gray-100 text-gray-500">
+                                        <tr>
+                                            <th class="py-2 px-4">Tahun Ajaran</th>
+                                            <th class="py-2 px-4">Kelas</th>
+                                            <th class="py-2 px-4">Tanggal Tercatat</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="history-table-body" class="divide-y divide-gray-200">
+                                        <tr><td colspan="3" class="py-4 text-center text-gray-400 italic">Memuat riwayat...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end">
+                <button onclick="closeModal()" class="px-8 py-2.5 rounded-xl text-sm font-bold text-gray-600 bg-white border border-gray-300 hover:bg-gray-100 transition shadow-sm">
+                    Tutup Profil
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script>
@@ -174,7 +304,7 @@
                         </td>
                         <td class="py-4 px-6 font-medium text-gray-700">${student.kelas_sekarang || '-'}</td>
                         <td class="py-4 px-6 text-center space-x-1">
-                            <button onclick="alert('Profil Detail Segera Hadir')" class="px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg text-sm font-semibold transition" title="Buka Detail Profil">
+                            <button onclick="openStudentDetail('${student.id}')" class="px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-lg text-sm font-semibold transition" title="Buka Detail Profil">
                                 <i class="fas fa-folder-open"></i> Buka
                             </button>
                             <button onclick="window.open('print_induk.html?id=${student.id}', '_blank')" class="px-3 py-1.5 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg text-sm font-semibold transition" title="Cetak Lembar Induk">
@@ -205,6 +335,90 @@
         function logout() {
             localStorage.removeItem('bi_session');
             window.location.href = 'index.html';
+        }
+
+        async function openStudentDetail(id) {
+            const student = allData.find(s => s.id === id);
+            if(!student) return;
+
+            // Populate Detail
+            document.getElementById('d_nama').innerText = student.nama_lengkap;
+            document.getElementById('d_nis_nisn').innerText = `${student.nis || '-'} / ${student.nisn || '-'}`;
+            document.getElementById('d_jk').innerText = student.jenis_kelamin || '-';
+            
+            let dob = '-';
+            if(student.tanggal_lahir) {
+                const d = new Date(student.tanggal_lahir);
+                dob = `${student.tempat_lahir || ''}, ${d.toLocaleDateString('id-ID', {day:'2-digit', month:'long', year:'numeric'})}`;
+            }
+            document.getElementById('d_ttl').innerText = dob;
+            document.getElementById('d_agama').innerText = student.agama || '-';
+            document.getElementById('d_warga').innerText = student.kewarganegaraan || '-';
+            document.getElementById('d_alamat').innerText = student.alamat_lengkap || '-';
+            document.getElementById('d_asal_sd').innerText = student.asal_sekolah || '-';
+            document.getElementById('d_kelas').innerText = student.kelas_sekarang || '-';
+            document.getElementById('d_tahun').innerText = student.tahun_masuk || '-';
+            document.getElementById('d_ayah').innerText = student.nama_ayah || '-';
+            document.getElementById('d_ibu').innerText = student.nama_ibu || '-';
+            document.getElementById('d_telp_ortu').innerText = student.no_telp_ortu || '-';
+            document.getElementById('d_status').innerText = student.status_siswa || 'Aktif';
+
+            // Foto
+            const imgEl = document.getElementById('d_foto');
+            const placeholderEl = document.getElementById('d_foto_placeholder');
+            if(student.foto_url) {
+                imgEl.src = student.foto_url;
+                imgEl.classList.remove('hidden');
+                placeholderEl.classList.add('hidden');
+            } else {
+                imgEl.classList.add('hidden');
+                placeholderEl.classList.remove('hidden');
+            }
+
+            // Load History
+            loadStudentHistory(id);
+
+            document.getElementById('modal-detail').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-detail').classList.remove('active');
+        }
+
+        async function loadStudentHistory(studentId) {
+            const tbody = document.getElementById('history-table-body');
+            tbody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-gray-400">Memuat riwayat...</td></tr>';
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('riwayat_kelas')
+                    .select('*')
+                    .eq('siswa_id', studentId)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-gray-500 italic text-[10px]">Belum ada riwayat tercatat.</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                data.forEach(h => {
+                    const dateStr = new Date(h.created_at).toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'});
+                    html += `
+                        <tr class="hover:bg-white transition">
+                            <td class="py-2 px-4 font-medium text-gray-700">${h.tahun_ajaran}</td>
+                            <td class="py-2 px-4 text-gray-600">Kelas ${h.kelas}</td>
+                            <td class="py-2 px-4 text-[10px] text-gray-400">${dateStr}</td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            } catch (err) {
+                console.error("History error:", err);
+                tbody.innerHTML = '<tr><td colspan="3" class="py-4 text-center text-red-500">Gagal memuat.</td></tr>';
+            }
         }
     </script>
 </body>
